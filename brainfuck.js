@@ -1,55 +1,85 @@
 var fs = require('fs');
 
-function execute(source) {
-	var textArray = source.split('');
-	var memory = new Array(128);
-	initalizeMemory(memory);
-	var ptr = 0;
-	for (var i = 0; i < textArray.length; i++) {
-		ptr = interpret(textArray[i], memory, ptr);
+var memory = malloc(30000); //30000 bytes is enough for anyone (also standard)
+var ptr = 0;
+var tokenIndex = -1;
+var tokens;
+
+function execute() {
+	var token;
+	while(hasNext()) {
+		token = next();
+		switch (token) {
+			case '<':
+				ptr--;
+				if (ptr < 0) process.exit(1); //outside memory
+				break;
+			case '>':
+				ptr++;
+				break;
+			case '+':
+				memory[ptr]++;
+				break;
+			case '-':
+				memory[ptr]--;
+				break;
+			case '.':
+				process.stdout.write(String.fromCharCode(memory[ptr]));
+				break;
+			case ',':
+
+			case '[':
+				if (memory[ptr] === 0) {
+					scan();					
+				} 
+				break;
+			case ']':
+				rewind();
+			default:
+				break;
+		}
+
 	}
-	console.log();
 }
 
-function interpret(token, memory, ptr) {
-	switch (token) {
-		case '<':
-			return ptr-1;
-		case '>':
-			return ptr+1;
-		case '+':
-			memory[ptr]++;
-			return ptr;
-		case '-':
-			memory[ptr]--;
-			return ptr;
-		case '.':
-			process.stdout.write(numToChar(memory[ptr]));
-			return ptr;
-		case ',':
-		case '[':			
-		case ']':
-		default:
-			return ptr;
-	}
+function hasNext() {
+	return tokens[tokenIndex+1];
 }
 
-function initalizeMemory(memory) {
+function hasPrev() {
+	return tokens[tokenIndex-1];
+}
+
+function next() {
+	return tokens[++tokenIndex];
+}
+
+function prev() {
+	return tokens[--tokenIndex];
+}
+
+function scan() {
+	while(hasNext() && next() != ']');
+}
+
+function rewind() {
+	while(hasPrev() && prev() != '[');
+	prev();
+}
+
+function malloc(size) {
+	var memory = new Array(size);
 	for (var i = 0; i < memory.length; i++) {
 		memory[i] = 0;
 	}
-}
-
-function numToChar(number) {
-	var chars = 'abcdefghijklmnopqrstxyzABCDEFGHIJKLMNOPQRSTXYZ';
-	return chars[number - 1];
+	return memory;
 }
 
 function read(file) {
-	return fs.readFileSync(file, 'utf8');
+	var str = fs.readFileSync(file, 'utf8');
+	return str.split('');
 }
 
-//execute('+>++>+++>++++>+++++'); //outputs 'abcde'
-execute('+++++ +++++ +++++ +++++ +++++ +++++ + . > +++++ . > +++++ +++++ ++ . > +++++ +++++ ++ . > +++++ +++++ +++++ .'); //Outputs 'Hello'
-
-execute(read(process.argv[2]));
+tokens = read(process.argv[2]);
+execute();
+console.log(); // Always clear
