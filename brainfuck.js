@@ -27,11 +27,12 @@ function execute() {
 				process.stdout.write(String.fromCharCode(memory[ptr]));
 				break;
 			case ',':
-
+				//Read input
+				break;
 			case '[':
 				if (memory[ptr] === 0) {
 					scan();					
-				} 
+				}
 				break;
 			case ']':
 				rewind();
@@ -64,7 +65,7 @@ function scan() {
 
 function rewind() {
 	while(hasPrev() && prev() != '[');
-	prev();
+	prev(); // Make sure to start before the loop, otherwise we'll never evaluate the loop condition
 }
 
 function malloc(size) {
