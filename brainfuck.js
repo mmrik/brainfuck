@@ -4,11 +4,14 @@ var memory = malloc(30000); //30000 bytes is enough for anyone (also standard)
 var ptr = 0;
 var tokenIndex = -1;
 var tokens;
+var stack = [];
+var debug = false;
 
 function execute() {
 	var token;
 	while(hasNext()) {
 		token = next();
+		log(token);
 		switch (token) {
 			case '<':
 				ptr--;
@@ -24,18 +27,26 @@ function execute() {
 				memory[ptr]--;
 				break;
 			case '.':
+				log("output");
 				process.stdout.write(String.fromCharCode(memory[ptr]));
 				break;
 			case ',':
 				//Read input
 				break;
 			case '[':
+				log("loop start");
 				if (memory[ptr] === 0) {
-					scan();					
+					log("skipping loop");
+					scanForEndLoop();					
+				} else {
+					log("executing loop");
+					stack.push(tokenIndex);
 				}
 				break;
 			case ']':
-				rewind();
+				log("popping stack");
+				tokenIndex = stack.pop() - 1;
+				break;
 			default:
 				break;
 		}
@@ -43,29 +54,32 @@ function execute() {
 	}
 }
 
-function hasNext() {
-	return tokens[tokenIndex+1];
+function log(string) {
+	if (debug) console.log(string);
 }
 
-function hasPrev() {
-	return tokens[tokenIndex-1];
+function hasNext() {
+	return tokens[tokenIndex+1];
 }
 
 function next() {
 	return tokens[++tokenIndex];
 }
 
-function prev() {
-	return tokens[--tokenIndex];
-}
-
-function scan() {
-	while(hasNext() && next() != ']');
-}
-
-function rewind() {
-	while(hasPrev() && prev() != '[');
-	prev(); // Make sure to start before the loop, otherwise we'll never evaluate the loop condition
+function scanForEndLoop() {
+	var depth = 0;
+	var token;
+	while(hasNext()) {
+		token = next();
+		if (token === '[') depth++;
+		if (token === ']') {
+			if (depth > 0) {
+				depth--;
+			} else {
+				return;
+			}
+		} 
+	}
 }
 
 function malloc(size) {
@@ -83,4 +97,3 @@ function read(file) {
 
 tokens = read(process.argv[2]);
 execute();
-console.log(); // Always clear
