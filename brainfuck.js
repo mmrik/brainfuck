@@ -6,13 +6,11 @@ var memPtr = 0;
 var cursor = -1;
 var tokens;
 var stack = [];
-var debug = false;
 
 function execute() {
 	var token;
 	while(hasNext()) {
 		token = next();
-		log(token);
 		switch (token) {
 			case '<':
 				memPtr--;
@@ -28,36 +26,26 @@ function execute() {
 				memory[memPtr]--;
 				break;
 			case '.':
-				log("output");
 				process.stdout.write(String.fromCharCode(memory[memPtr]));
 				break;
 			case ',':
-				log('input');
 				var input = readlineSync.promptCL();
 				memory[memPtr] = input[0].charCodeAt(0);
 				break;
 			case '[':
-				log("loop start");
 				if (memory[memPtr] === 0) {
-					log("skipping loop");
 					scanForEndLoop();					
 				} else {
-					log("executing loop");
 					stack.push(cursor);
 				}
 				break;
 			case ']':
-				log("popping stack");
 				cursor = stack.pop() - 1;
 				break;
 			default:
 				break;
 		}
 	}
-}
-
-function log(string) {
-	if (debug) console.log(string);
 }
 
 function hasNext() {
